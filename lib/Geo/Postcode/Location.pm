@@ -4,7 +4,6 @@ use strict;
 use warnings;
 use vars qw($VERSION $AUTOLOAD $datafile $tablename $dbh $broadosgrid $fineosgrid $units $pi);
 use DBI;
-use Cwd;
 
 $VERSION = '0.01';
 $tablename = "postcodes";
@@ -34,12 +33,11 @@ There are at least three ways to supply your own gridref data.
 
 =item * replace the data file
 
-If you can get your data into a SQLite file, all you have to do is set the variable C<Geo::Postcode::Location::datafile> to the full path to your data file:
+If you can get your data into a SQLite file, all you have to do is set the either C<Geo::Postcode::Location::datafile> or $ENV{POSTCODE_DATA} to the full path to your data file:
 
   $Geo::Postcode::Location::datafile = '/home/site/data/postcodes.db';
-  my ($x, $y) = Geo::Postcode->coordinates('EC1Y 8PQ');
-
-Under mod_perl this will mean that all your applications use this data file: this may even be a good thing.
+  # or
+  PerlSetEnv POSTCODE_DATA /home/site/data/postcodes.db
 
 I've included (in ./useful) an idiot script that I use to turn .csv data into a SQLite file suitable for use with this module.
 
@@ -148,9 +146,9 @@ sub dbh {
 
 =head2 datafile ( path_to_file )
 
-Accepts and returns the location of the SQLite file we are expecting to hold location data.
+Accepts and returns the location of the SQLite file we expect to provide location data.
 
-If no file path is supplied, or found by checking C<$Geo::Postcode::Location::datafile>, then we will scan the path to locate the default data file that is installed with this module.
+If no file path is supplied, or found by checking C<$Geo::Postcode::Location::datafile> and C<$ENV{POSTCODE_DATA}>, then we will scan the path to locate the default data file that is installed with this module.
 
 =cut
 
@@ -158,8 +156,14 @@ sub datafile {
     my $self = shift;
     return $self->{datafile} = $_[0] if @_;
     return $self->{datafile} = $datafile if $datafile;
-    my @files = grep { -e $_ } map {"$_/Geo/Postcode/postcodes.db"} @INC;
-    return $self->{datafile} = $files[0];
+    return $self->{datafile} = $ENV{POSTCODE_DATA} if $ENV{POSTCODE_DATA};
+    return $self->{datafile} = _find_file('postcodes.db');
+}
+
+sub _find_file {
+    my $file = shift;
+    my @files = grep { -e $_ } map { "$_/Geo/Postcode/$file" } @INC;
+    return $files[0];
 }
 
 =head2 tablename ()

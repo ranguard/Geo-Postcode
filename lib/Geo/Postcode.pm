@@ -7,7 +7,7 @@ use overload
     '""' => '_as_string',
     'eq' => '_as_string';
 
-$VERSION = '0.1';
+$VERSION = '0.11';
 
 =head1 NAME
 
@@ -35,17 +35,17 @@ Geo::Postcode - UK Postcode validation and location
    
   my $clean_postcode = Geo::Postcode->valid( $postcode );
 
-  my ($area, $district, $sector, $unit) = Geo::Postcode->analyse('SW1 1AA');    
+  my ($unit, $sector, $district, $area) = Geo::Postcode->analyse('SW1 1AA');    
 
 =head1 DESCRIPTION
 
-Geo::Postcode will accept full or partial UK postcodes, validate them against the official spec, separate them into their component parts, translate them into map references and calculate distances between them.
+Geo::Postcode will accept full or partial UK postcodes, validate them against the official spec, separate them into their significant parts, translate them into map references and calculate distances between them.
 
 It does not check whether the supplied postcode exists: only whether it is well-formed according to British Standard 7666, which you can find here: 
 
   http://www.govtalk.gov.uk/gdsc/html/frames/PostCode.htm
 
-GP will also work with partial codes, ie areas, districts and sectors.  They won't validate, but you can still test them for legitimacy with a call to C<valid_fragment>, and you can still turn them into grid references.
+GP will also work with partial codes, ie areas, districts and sectors.  They won't validate, but you can test them for legitimacy with a call to C<valid_fragment>, and you can still turn them into grid references.
 
 To work with US zipcodes, you need Geo::Postalcode instead.
 
@@ -70,7 +70,7 @@ The object will not be available for any more requests, of course.
   
 =head1 INTERNALS
 
-The main Geo::Postcode object is very simple blessed hashref. The postcode information is stored as a four-element listref in $self->{postcode}. Location information is handled by the separate L<Geo::Postcode::Location>, which by default uses a simple DB file but can easily be overridden to use the data source of your choice.
+The main Geo::Postcode object is very simple blessed hashref. The postcode information is stored as a four-element listref in $self->{postcode}. Location information is retrieved by the separate L<Geo::Postcode::Location>, which by default uses SQLite but can easily be overridden to use the database or other source of your choice. The location machinery is not loaded until it's needed, so you can validate and parse postcodes very cheaply.
 
 =head1 CONSTRUCTION
 
@@ -94,7 +94,7 @@ sub new {
 
 =head2 postcode_string ( )
 
-Always returns the postcode string with which the object was constructed, but uppercased. Cannot be set after construction.
+Always returns the (uppercased) postcode string with which the object was constructed. Cannot be set after construction.
 
 =cut
 
@@ -108,7 +108,7 @@ Breaks the postcode into its significant parts, eg:
 
   EC1R 8DH --> | EC | 1R | 8 | DH |
 
-Stores the parts for later reference and returns them as a listref. Most other methods in this class call fragments() first to get their raw material.
+then stores the parts for later reference and returns a listref. Most other methods in this class call fragments() first to get their raw material.
 
 =cut
 
@@ -132,9 +132,7 @@ sub fragments {
 
 =head1 LOCATION
 
-The grid-reference mapping is handled by Geo::Postcode::Location, which is only loaded when required. This is because it comes with its own database of very basic location information, and you won't want to load that unless you want to. It also makes it easier to subclass the location functions and use your own data source.
-
-The first call to a location-related method of Geo::Postcode will cause the location class to be loaded, along with its data file, and a location object to be associated with this postcode object. We then pass all location-related queries on to the location object.
+The first call to a location-related method of Geo::Postcode will cause the location class - normally L<Geo::Postcode::Location> - to be loaded along with its data file, and a location object to be associated with this postcode object. We then pass all location-related queries on to the location object.
 
 The accuracy of the information returned by location methods depends on the resolution of the location data file: see the POD for Geo::Postcode::Location for how to supply your own dataset instead of using the crude set that comes with this module.
 
@@ -184,7 +182,7 @@ sub long { return shift->location->long(@_); }
 
 =head2 placename () ward () nhsarea () 
 
-Return information from other fields that may or may not be present in your dataset. The default set supplied with this module doesn't have these extra fields but a set derived from the PAF normally will.
+These return information from other fields that may or may not be present in your dataset. The default set supplied with this module doesn't have these extra fields but a set derived from the PAF normally will.
 
 =cut
 
@@ -248,7 +246,7 @@ sub bearing_to {
 
 =head2 friendly_bearing_to ( postcode objects or strings) 
 
-Accepts a list of postcode objects and/or strings, and returns a corresponding list of rough directions from here to there. 'NW', 'ESE'. That sort of thing.
+Accepts a list of postcode objects and/or strings, and returns a corresponding list of rough directions from here to there. 'NW', 'ESE', that sort of thing.
 
   print "That's " . $postcode1->distance_to($postcode2) . " km " . 
     $postcode1->friendly_bearing_to($postcode2) . " of here.";
