@@ -7,7 +7,7 @@ use overload
     '""' => '_as_string',
     'eq' => '_as_string';
 
-$VERSION = '0.11';
+$VERSION = '0.12';
 
 =head1 NAME
 
@@ -92,6 +92,14 @@ sub new {
     return $self;
 }
 
+sub from {
+    my ($class, %parameters) = @_;
+    
+
+
+
+}
+
 =head2 postcode_string ( )
 
 Always returns the (uppercased) postcode string with which the object was constructed. Cannot be set after construction.
@@ -135,6 +143,7 @@ sub fragments {
 The first call to a location-related method of Geo::Postcode will cause the location class - normally L<Geo::Postcode::Location> - to be loaded along with its data file, and a location object to be associated with this postcode object. We then pass all location-related queries on to the location object.
 
 The accuracy of the information returned by location methods depends on the resolution of the location data file: see the POD for Geo::Postcode::Location for how to supply your own dataset instead of using the crude set that comes with this module.
+
 
 =head2 location_class ()
 

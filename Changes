@@ -1,5 +1,9 @@
 Revision history for Perl extension Geo::Postcode.
 
+0.12  2 September 04
+    - fixed CPAN installation where requirements not met: database file
+      now built at proper time thanks to own make target.
+
 0.11  2 September 04
     - Database file now built during installation to ensure compatibility.
 

@@ -5,6 +5,6 @@ README
 lib/Geo/Postcode.pm
 lib/Geo/Postcode/Location.pm
 test.pl
-useful/import_csv.pl
-useful/postcodes.csv
+postcodedata/makedb.pl
+postcodedata/postcodes.csv
 META.yml                                Module meta-data (added by MakeMaker)
