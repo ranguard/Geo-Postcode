@@ -1,0 +1,10 @@
+Changes
+Makefile.PL
+MANIFEST
+README
+lib/Geo/Postcode.pm
+lib/Geo/Postcode/Location.pm
+lib/Geo/Postcode/postcodes.db
+test.pl
+useful/import_csv.pl
+META.yml                                Module meta-data (added by MakeMaker)
