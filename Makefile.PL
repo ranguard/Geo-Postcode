@@ -23,8 +23,8 @@ package MY;
 
 sub postamble {
       return <<"EOF";
-data:
-\tperl ./postcodedata/makedb.pl
+locationdata:
+\tperl ./postcodedata/makesqlite.pl
 
 EOF
 }
@@ -32,14 +32,14 @@ EOF
 sub test {
     my $class = shift;
     my $makefragment = $class->SUPER::test(@_);
-    $makefragment =~ s/^(test ::)/$1 data/m;
+    $makefragment =~ s/^(test ::)/$1 locationdata/m;
     return $makefragment;
 }
 
 sub install {
     my $class = shift;
     my $makefragment = $class->SUPER::install(@_);
-    $makefragment =~ s/^(install ::)/$1 data/m;
+    $makefragment =~ s/^(install ::)/$1 locationdata/m;
     return $makefragment;
 }
 

@@ -5,7 +5,7 @@ use warnings;
 use vars qw($VERSION $AUTOLOAD $datafile $tablename $dbh $broadosgrid $fineosgrid $units $pi);
 use DBI;
 
-$VERSION = '0.01';
+$VERSION = '0.12';
 $tablename = "postcodes";
 $units = "km";
 $pi = 3.14159;
@@ -59,6 +59,12 @@ If running under mod_perl, you probably don't want to share the handle like that
 =item * override the lookup mechanism in subclass
 
 The data-retrieval process is divided up to make this as simple as possible: see the method descriptions below for details. You should be able to replace the data source by overriding C<dbh> or redo the whole lookup by replacing C<retrieve>.
+
+  $Geo::Postcode->location_class('My::Location');
+
+  package My::Location;
+  use base qw(Geo::Postcode::Location);
+  sub dbh { ... }
 
 =head1 METHODS
 
@@ -184,7 +190,7 @@ Returns a list of the columns we should pull from the database row into the loca
 
 =cut
 
-sub cols { return qw(gridn gride lat long town ward nhsarea) }
+sub cols { return qw(gridn gride latitude longitude town ward nhsarea) }
 
 =head2 AUTOLOAD ()
 
@@ -197,6 +203,8 @@ sub AUTOLOAD {
 	my $m = $AUTOLOAD;
 	$m =~ s/.*://;
     return if $m eq 'DESTROY';
+    $m = 'latitude' if $m eq 'lat';
+    $m = 'longitude' if $m eq 'long';
     $self->retrieve;
     my %cols = map {$_=>1} $self->cols;
     return unless $cols{$m};
@@ -205,13 +213,13 @@ sub AUTOLOAD {
 
 =head2 gridref () 
 
-Retursn a proper concatenated grid reference for this postcode, in classic Ordnance Survey AA123456 form rather than the all-digits version we use internally.
+Returns a proper concatenated grid reference for this postcode, in classic Ordnance Survey AA123456 form rather than the all-digits version we use internally.
 
 See http://www.ordnancesurvey.co.uk/oswebsite/freefun/nationalgrid/nghelp2.html or the more sober http://vancouver-webpages.com/peter/osgbfaq.txt
 
 for more about grid references.
 
-Unlike other grid methods here, this one will also strip redunant trailing zeros from the eastings and northings for the sake of readability.
+Unlike other grid methods here, this one will also strip redundant trailing zeros from the eastings and northings for the sake of readability.
 
 =cut
 

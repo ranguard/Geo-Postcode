@@ -7,7 +7,7 @@ use overload
     '""' => '_as_string',
     'eq' => '_as_string';
 
-$VERSION = '0.12';
+$VERSION = '0.15';
 
 =head1 NAME
 
@@ -35,23 +35,23 @@ Geo::Postcode - UK Postcode validation and location
    
   my $clean_postcode = Geo::Postcode->valid( $postcode );
 
-  my ($unit, $sector, $district, $area) = Geo::Postcode->analyse('SW1 1AA');    
+  my ($unit, $sector, $district, $area) = Geo::Postcode->analyse('SW1 1AA');
 
 =head1 DESCRIPTION
 
-Geo::Postcode will accept full or partial UK postcodes, validate them against the official spec, separate them into their significant parts, translate them into map references and calculate distances between them.
+Geo::Postcode will accept full or partial UK postcodes, validate them against the official spec, separate them into their significant parts, translate them into map references or co-ordinates and calculate distances between them.
 
 It does not check whether the supplied postcode exists: only whether it is well-formed according to British Standard 7666, which you can find here: 
 
   http://www.govtalk.gov.uk/gdsc/html/frames/PostCode.htm
 
-GP will also work with partial codes, ie areas, districts and sectors.  They won't validate, but you can test them for legitimacy with a call to C<valid_fragment>, and you can still turn them into grid references.
+Geo::Postcode will also work with partial codes, ie areas, districts and sectors. They won't validate, but you can test them for legitimacy with a call to C<valid_fragment>, and you can still turn them into grid references.
 
 To work with US zipcodes, you need Geo::Postalcode instead.
 
 =head1 GRID REFERENCES AND DATA FILES
 
-Any postcode, whether fully or partly specified, can be turned into a grid reference. The Post Office calls it a centroid, and it marks the approximate centre of the area described by the code.
+Any postcode, whether fully or partly specified, can be turned into a grid reference. The Post Office calls it a centroid, and it marks the approximate centre of the area covered by the code.
 
 Unfortunately, and inexplicably, this information is not public domain: unless you're prepared to work at a very crude level, you have to buy location data either from the Post Office or a data shop.
 
@@ -61,7 +61,7 @@ This means that the coordinates we return and the distances we calculate are a b
 
 =head1 INTERFACE
 
-This is a mostly vanilla OOP module, but for quick and dirty work you can skip the object construction step and call a method directly with a postcode string. It will build the necessary object behind the scenes and return the result of the operation. 
+This is a mostly vanilla OOP module, but for quick and dirty work you can skip the object construction step and call a method directly with a postcode string. It will build the necessary object behind the scenes and return the result of the operation.
 
   my @coordinates = Geo::Postcode->coordinates('LA23 3PA');
   my $postcode = Geo::Postcode->valid($input->param('postcode'));
@@ -74,30 +74,32 @@ The main Geo::Postcode object is very simple blessed hashref. The postcode infor
 
 =head1 CONSTRUCTION
 
-=head2 new ( postcode_string )
+=head2 new ( postcode_string, location_class )
 
-Constructs and returns the very simple postcode object. All other processing and loading is deferred until a method is called.
+Constructs and returns the very simple postcode object. All other processing and loading is deferred.
+
+You can also pass in a couple of parameters up front, as a hashref after the postcode:
+
+  my $postcode = Geo::Postcode->new('SW1 1AA', {
+    location_class => 'My::Location::Data::Class',
+    distance_units => 'miles',
+  })
+
+This list will probably grow.
 
 =cut
 
 sub new {
-    my ($class, $postcode) = @_;
+    my ($class, $postcode, $parameters) = @_;
     $class = ref $class || $class;
-    my $self = bless {
+    my $self = {
         postcode_string => $postcode,
         postcode => [],
         location => undef,
         reformatted => undef,
-    }, $class;
-    return $self;
-}
-
-sub from {
-    my ($class, %parameters) = @_;
-    
-
-
-
+    };
+    $self->{$_} = $parameters->{$_} for qw(location_class distance_units);
+    return bless $self, $class;
 }
 
 =head2 postcode_string ( )
@@ -116,7 +118,7 @@ Breaks the postcode into its significant parts, eg:
 
   EC1R 8DH --> | EC | 1R | 8 | DH |
 
-then stores the parts for later reference and returns a listref. Most other methods in this class call fragments() first to get their raw material.
+then stores the parts for later reference and returns them as a listref. Most other methods in this class call C<fragments()> first to get their raw material.
 
 =cut
 
@@ -144,18 +146,31 @@ The first call to a location-related method of Geo::Postcode will cause the loca
 
 The accuracy of the information returned by location methods depends on the resolution of the location data file: see the POD for Geo::Postcode::Location for how to supply your own dataset instead of using the crude set that comes with this module.
 
+=head2 location ()
+
+Returns - and if necessary, creates - the location object associated with this postcode object. This operation is avoided until explicitly requested, so that simple postcode-validation can be as economical as possible. The location object does all the work of looking up map reference data, calculating distances and translating into other forms.
 
 =head2 location_class ()
 
-Returns the full name of the class that should be called to get a location object.
+Sets and/or returns the full name of the class that should be called to get a location object. Calling C<location_class> after a location object has been constructed will cause that object to be destroyed, so that the next call to a location-dependent method constructs a new object of the newly-specified class.
 
-=head2 location ()
+=head2 default_location_class ()
 
-Returns - and if necessary, creates - the location object associated with this postcode object.
+Returns the name of the location class we'll use if no other is specified. The default default is L<Geo::Postcode::Location>, but if you're subclassing you will probably want to replace that with one of your own.
 
 =cut
 
-sub location_class { 'Geo::Postcode::Location' }
+sub location_class {
+    my $self = shift;
+    my $class = shift;
+    if (defined $class && $class ne $self->{location_class}) {
+        $self->{location} = undef;
+        return $self->{location_class} = $class;
+    }
+    return $self->{location_class} ||= $self->default_location_class;
+}
+    
+sub default_location_class { 'Geo::Postcode::Location' }
 
 sub location {
     my $self = shift;
@@ -186,8 +201,8 @@ Return the latitude and longitude of the centre of this postcode.
 
 =cut
 
-sub lat { return shift->location->lat(@_); }
-sub long { return shift->location->long(@_); }
+sub lat { return shift->location->latitude(@_); }
+sub long { return shift->location->longitude(@_); }
 
 =head2 placename () ward () nhsarea () 
 
@@ -196,10 +211,12 @@ These return information from other fields that may or may not be present in you
 =cut
 
 sub placename { return shift->location->placename(@_); }
+sub ward { return shift->location->ward(@_); }
+sub nhsarea { return shift->location->nhsarea(@_); }
 
 =head2 coordinates () 
 
-Return the grid reference x, y coordinates of this postcode as two separate values. The grid reference we use here are completely numerical: the usual OS prefix is omitted and an absolute coordinate value returned unless you call C<gridref>.
+Return the grid reference x, y coordinates of this postcode as two separate values. The grid reference we use here are completely numerical: the usual OS prefix is omitted and an absolute coordinate value returned unless you get a stringy version from C<gridref()>.
 
 =cut
 
@@ -212,19 +229,21 @@ sub coordinates {
 
 Accepts a postcode object or string, and returns the distance from here to there.
 
-As usual, you can call this method directly (ie without first constructing an object):
+As usual, you can call this method directly (ie without first constructing an object), or with any combination of postcode strings and objects:
 
   my $distance = Geo::Postcode->distance_from('LA23 3PA', 'EC1Y 8PQ');
+  my $distance = Geo::Postcode->distance_from($postcode, 'EC1Y 8PQ');
+  my $distance = Geo::Postcode->distance_from('EC1Y 8PQ', $postcode);
 
-Will do what you would expect. C<distance_between> is provided as a synonym of C<distance_from> to make that read more sensibly:
+Will do what you would expect, and the last two should be exactly the same. C<distance_between> is provided as a synonym of C<distance_from> to make that read more sensibly:
 
   my $distance = Geo::Postcode->distance_between('LA23 3PA', 'EC1Y 8PQ');
 
-And in any of these cases you can supply an additional parameter dictating the units of distance: the options are currently 'miles', 'm' or 'km' (the default).
+In any of these cases you can supply an additional parameter dictating the units of distance: the options are currently 'miles', 'm' or 'km' (the default).
 
   my $distance = Geo::Postcode->distance_between('LA23 3PA', 'EC1Y 8PQ', 'miles');
-  
-The same thing can be accomplished by setting C<$Geo::Postcode::Location::units> if you don't mind acting global.
+
+The same thing can be accomplished by supplying a 'distance_units' parameter at construction time or, if you don't mind acting global, by setting C<$Geo::Postcode::Location::units>.
 
 =cut
 
@@ -232,8 +251,9 @@ sub distance_from {
     my $self = shift;
     $self = $self->new(shift) unless ref $self;
     my $other = shift;
+    my $units = shift || $self->{distance_units};
     $other = ref($other) ? $other : $self->new($other);
-    return $self->location->distance_from( $other, @_ );
+    return $self->location->distance_from( $other, $units );
 }
 
 sub distance_between {
@@ -302,7 +322,7 @@ sub valid {
 
 =head2 valid_fragment ()
 
-A looser check that doesn't mind incomplete postcodes. It will test that area, district or sector codes respect the rules for valid characters in that part of the postcode, and return true unless it finds anything that's not allowed.
+A looser check that doesn't mind incomplete postcodes. It will test that area, district or sector codes follow the rules for valid characters in that part of the postcode, and return true unless it finds anything that's not allowed.
 
 =cut
 
@@ -348,7 +368,7 @@ will return:
   
   ('EC1Y 8PQ', 'EC1Y 8', 'EC1Y', 'EC')
   
-which is useful mostly for dealing with situations where you don't know what resolution will be required and need to try alternatives. We do this when location-finding, since the resolution of your location data may vary and cannot be predicted.
+which is useful mostly for dealing with situations where you don't know what resolution will be available and need to try alternatives. We do this when location-finding, so as to be able to work with data of unpredictable or variable specificity (ie we are cheap and only buy very rough data sets, but people enter exact postcodes).
 
 =cut
 
@@ -362,6 +382,7 @@ sub analyse {
         $self->area,
     ];
 }
+sub analyze { return shift->analyse(@_); }
 
 =head1 area ()
 
@@ -391,7 +412,7 @@ sub district {
 
 =head1 sector ()
 
-Returns the sector code part of this postcode. This is getting more local: it includes the first part of the code and the first digit of the second part, and is apparent used by the delivery office to sort the package. It will look something like 'EC1Y 8' or 'E1 7', and note that the space is meaningful. 'E1 7' and 'E17' are not the same thing.
+Returns the sector code part of this postcode. This is getting more local: it includes the first part of the code and the first digit of the second part, and is apparent used by the delivery office to sort the package. It will look something like 'EC1Y 8' or 'E1 7', and note that the space *is* meaningful. 'E1 7' and 'E17' are not the same thing.
 
 =cut
 
@@ -449,9 +470,15 @@ sub _special_case {
     return 1 if $pc && grep { $pc eq $_ } $self->special_cases;
 }
 
+=head1 PLANS
+
+The next majorish version of this module will support (but not require) the interface offered by Geo::Postalcode, so that one can be dropped into the place of the other. Some methods will not be relevant, but I'll try and keep as close a match as I can.
+
 =head1 AUTHOR
 
 William Ross, wross@cpan.org
+
+Development of this library is kindly supported by Amnesty International UK, who are pleased to see it distributed for public use but should not be held responsible for any shortcomings (or inadvertent copyright violations :).
 
 =head1 COPYRIGHT
 

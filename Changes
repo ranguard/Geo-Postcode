@@ -1,5 +1,9 @@
 Revision history for Perl extension Geo::Postcode.
 
+0.13  20 October 04
+    - uses latitude and longitude rather than lat and long internally: 
+      'long' can't be a column name in mysql.
+
 0.12  2 September 04
     - fixed CPAN installation where requirements not met: database file
       now built at proper time thanks to own make target.
