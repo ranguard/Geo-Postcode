@@ -17,17 +17,8 @@ WriteMakefile(
     clean => { 
         FILES => './blib/lib/Geo/Postcode/postcodes.db' 
     },
+	PL_FILES => { "postcodedata/makesqlite.pl" => "postcodedata/makesqlite"},
 );
-
-package MY;
-
-sub postamble {
-      return <<"EOF";
-locationdata:
-\tperl ./postcodedata/makesqlite.pl
-
-EOF
-}
 
 sub test {
     my $class = shift;
