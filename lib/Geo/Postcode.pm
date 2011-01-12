@@ -7,7 +7,7 @@ use overload
     '""' => '_as_string',
     'eq' => '_as_string';
 
-$VERSION = '0.15';
+$VERSION = '0.16';
 
 =head1 NAME
 
