@@ -451,6 +451,10 @@ sub _as_string {
     my $self = shift;
     return $self->{reformatted} if $self->{reformatted};
     my ($a, $d, $s, $u) = @{ $self->fragments };
+	$a = "" if not defined $a;
+	$d = "" if not defined $d;
+	$s = "" if not defined $s;
+	$u = "" if not defined $u;
     return $self->{reformatted} = "$a$d $s$u";
 }
 
