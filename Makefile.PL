@@ -6,17 +6,19 @@ use ExtUtils::MakeMaker;
 $|++;
 
 WriteMakefile(
-    NAME => 'Geo::Postcode',
-    VERSION_FROM => 'lib/Geo/Postcode.pm',
-    PREREQ_PM => { 'DBD::SQLite' => 0 }, (
-        $] >= 5.005 ? (
-            ABSTRACT_FROM => 'lib/Geo/Postcode.pm', 
-            AUTHOR => 'william ross <wross@cpan.org>'
-        ) : ()
-    ),
-    clean => { 
-        FILES => './blib/lib/Geo/Postcode/postcodes.db' 
-    },
+	NAME => 'Geo::Postcode',
+	VERSION_FROM => 'lib/Geo/Postcode.pm',
+	PREREQ_PM => { 'DBD::SQLite' => 0,
+		"DBI" => 0,
+		"Test::More" => 0 }, (
+		$] >= 5.005 ? (
+			ABSTRACT_FROM => 'lib/Geo/Postcode.pm', 
+			AUTHOR => 'william ross <wross@cpan.org>'
+		) : ()
+	),
+	clean => { 
+		FILES => './blib/lib/Geo/Postcode/postcodes.db' 
+	},
 	PL_FILES => { "postcodedata/makesqlite.pl" => "postcodedata/makesqlite"},
 );
 
