@@ -31,6 +31,8 @@ It doesn't really have a useful direct interface, since it requires an object of
 
 There are at least three ways to supply your own gridref data.
 
+=over
+
 =item * replace the data file
 
 If you can get your data into a SQLite file, all you have to do is set the either C<Geo::Postcode::Location::datafile> or $ENV{POSTCODE_DATA} to the full path to your data file:
@@ -65,6 +67,8 @@ The data-retrieval process is divided up to make this as simple as possible: see
   package My::Location;
   use base qw(Geo::Postcode::Location);
   sub dbh { ... }
+
+=back
 
 =head1 METHODS
 
