@@ -1,5 +1,4 @@
 use strict;
-use lib qw( ../lib ./test );
 use DBI;
 use Test::More;
 
