@@ -53,9 +53,7 @@ To work with US zipcodes, you need Geo::Postalcode instead.
 
 Any postcode, whether fully or partly specified, can be turned into a grid reference. The Post Office calls it a centroid, and it marks the approximate centre of the area covered by the code.
 
-Unfortunately, and inexplicably, this information is not public domain: unless you're prepared to work at a very crude level, you have to buy location data either from the Post Office or a data shop.
-
-This module comes with with a basic set of publicly-available coordinates that covers nearly all the postcode districts (ie it maps the first block of the postcode but not the second). 
+You will need to download your own data set from http://www.ordnancesurvey.co.uk/oswebsite/opendata/ (Code-Point Open) if you want a full set of data. This module comes with with a basic set of publicly-available coordinates that covers nearly all the postcode districts (ie it maps the first block of the postcode but not the second). 
 
 This means that the coordinates we return and the distances we calculate are a bit crude, being based at best on the postcode area. See the POD for Geo::Delivery::Location for how to override the standard data set something more comprehensive.
 

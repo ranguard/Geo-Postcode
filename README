@@ -13,6 +13,10 @@ to people who want to validate input, as it should be very quick and
 memory efficient and doesn't load the location data or associated libraries
 until you ask for it.
 
+For a full UK Postcode dataset please see:
+
+http://www.ordnancesurvey.co.uk/oswebsite/opendata/
+
 any trouble, write to wross@cpan.org or post a bug at rt.cpan.org.
 
 will
