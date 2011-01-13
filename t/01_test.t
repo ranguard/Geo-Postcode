@@ -31,22 +31,28 @@ is (Geo::Postcode->valid_fragment('LA23 3'), 1, "valid fragment");
 is (Geo::Postcode->valid_fragment('LA233'), 1, "valid fragment");
 is (Geo::Postcode->valid_fragment('Q23'), undef, "invalid fragment");
 
-my @good_postcodes = ('N12 0PJ','N20 0AD');
+my @valid_postcodes = ('N12 0PJ','N20 0AD');
 
-foreach my $good (@good_postcodes) {
-    is(Geo::Postcode->valid($good), $good, "Valid: $good");    
-    my $no_space = $good;
+foreach my $valid (@valid_postcodes) {
+    is(Geo::Postcode->valid($valid), $valid, "Valid: $valid");    
+    my $no_space = $valid;
     $no_space =~ s/\s+//g;
-    is(Geo::Postcode->valid($no_space), $good, "Valid: $good");    
+    is(Geo::Postcode->valid($no_space), $valid, "Valid: $valid");    
 }
 
-is (Geo::Postcode->valid('23 3PA'), undef, "bad format properly rejected");
-is (Geo::Postcode->valid('QA23 3PA'), undef, "bad character properly rejected");
-is (Geo::Postcode->valid('LZ23 3PA'), undef, "bad character properly rejected");
-is (Geo::Postcode->valid('EC1Z 8PQ'), undef, "bad character properly rejected");
-is (Geo::Postcode->valid('LA23 3KA'), undef, "bad character properly rejected");
-is (Geo::Postcode->valid('LA23 3PK'), undef, "bad character properly rejected");
-is (Geo::Postcode->valid('LAA23 3PA'), undef, "bad format properly rejected");
+my @invalid_postcodes = (
+    '23 3PA', # Must start with character
+    'QA23 3PA',
+    'LZ23 3PA',
+    'EC1Z 8PQ',
+    'LA23 3KA',
+    'LA23 3PK',
+    'LAA23 3PA',
+);
+
+foreach my $invalid (@invalid_postcodes) {
+    is (Geo::Postcode->valid($invalid), undef, "bad format:'$invalid' properly rejected");    
+}
 
 isa_ok($postcode->location, 'Geo::Postcode::Location', 'location object');
 is($postcode->gridn, 497700, 'grid north');
