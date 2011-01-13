@@ -28,10 +28,6 @@ To install this module type the following:
     make test 
     make install
 
-DEPENDENCIES
-
-None.
-
 COPYRIGHT AND LICENCE
 
 Copyright (C) 2004 william ross
