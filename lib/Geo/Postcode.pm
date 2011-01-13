@@ -305,7 +305,7 @@ sub valid {
     return $self if $self->_special_case;
     my ($a, $d, $s, $u) = @{ $self->fragments };
 
-    return unless defined $a && defined $d && defined $s && defined $u;
+    return unless $a && defined $d && defined $s && $u;
     return if length($a) > 2;
     return if $a =~ /[\W\d]/;
     return if $a =~ /^[QVX]/;
@@ -337,11 +337,11 @@ sub valid_fragment {
     return if $a =~ /[\W\d]/;
     return if $a =~ /^[QVX]/;
     return if $a =~ /^.[IJZ]/;
-    return 1 unless $d || $s || $u;
+    return 1 unless defined $d || defined $s || $u;
     
     return if length($a) == 1 && $d !~ /\d[\dABCDEFGHJKSTUW]?/;
     return if length($a) == 2 && $d !~ /\d[\dABEHMNPRVWXY]?/;
-    return 1 unless $s || $u;
+    return 1 unless defined $s || $u;
     
     return if length($s) > 1;
     return if $s =~ /\D/;

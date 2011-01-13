@@ -9,7 +9,7 @@ use Test::More;
 $|++;
 
 BEGIN {
-    plan (tests => 35);
+    plan (tests => 38);
     use_ok('Geo::Postcode');
 }
 
@@ -31,7 +31,14 @@ is (Geo::Postcode->valid_fragment('LA23 3'), 1, "valid fragment");
 is (Geo::Postcode->valid_fragment('LA233'), 1, "valid fragment");
 is (Geo::Postcode->valid_fragment('Q23'), undef, "invalid fragment");
 
-is(Geo::Postcode->valid('N120PJ'), 'N12 0PJ', 'Can validate a postcode with a 0');
+my @good_postcodes = ('N12 0PJ','N20 0AD');
+
+foreach my $good (@good_postcodes) {
+    is(Geo::Postcode->valid($good), $good, "Valid: $good");    
+    my $no_space = $good;
+    $no_space =~ s/\s+//g;
+    is(Geo::Postcode->valid($no_space), $good, "Valid: $good");    
+}
 
 is (Geo::Postcode->valid('23 3PA'), undef, "bad format properly rejected");
 is (Geo::Postcode->valid('QA23 3PA'), undef, "bad character properly rejected");
