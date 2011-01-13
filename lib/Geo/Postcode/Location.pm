@@ -314,8 +314,8 @@ Returns a readable approximation of the bearing from here to there, in a form li
 sub friendly_bearing_to {
     my ($self, $postcode) = @_;
     my $bearing = $self->bearing_to( $postcode );
-    my @nicely = qw(N NNW NW WNW W WSW SW SSW S SSE SE ESE E ENE NE NNE);
-    my $i = int( $bearing/22.5 );
+    my @nicely = qw(N NNW NW WNW W WSW SW SSW S SSE SE ESE E ENE NE NNE N);
+    my $i = int( ($bearing + 11.25)/22.5 );
     return $nicely[$i];
 }
 

@@ -3,6 +3,7 @@ Revision history for Perl extension Geo::Postcode.
 0.17 
     - Improve definedness checks [RT: #16956]
     - Refactor tests a little
+    - Change @nicely as per [RT #24382]
 
 0.16 Wed 12 Jan 2011
     - Fix for tests/Makefile.PL (mstevens)
