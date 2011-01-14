@@ -35,15 +35,13 @@ There are at least three ways to supply your own gridref data.
 
 =item * replace the data file
 
-If you get a full set of data (from http://www.ordnancesurvey.co.uk/oswebsite/opendata/ - Code-Point Open)
+If you get a full set of postcode data from http://www.ordnancesurvey.co.uk/oswebsite/opendata/ - Code-Point Open.
 
 If you can get your data into a SQLite file, all you have to do is set the either C<Geo::Postcode::Location::datafile> or $ENV{POSTCODE_DATA} to the full path to your data file:
 
   $Geo::Postcode::Location::datafile = '/home/site/data/postcodes.db';
   # or
   PerlSetEnv POSTCODE_DATA /home/site/data/postcodes.db
-
-I've included (in ./useful) an idiot script that I use to turn .csv data into a SQLite file suitable for use with this module.
 
 =item * replace the database handle
 
